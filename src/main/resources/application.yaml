@@ -1,6 +1,10 @@
 spring:
   application:
-    name: apigateway
+    name: api-gateway
+  security:
+    user:
+      name: disabled
+      password: disabled
 server:
   port: 8084
 
@@ -11,7 +15,7 @@ management:
       exposure:
         include: "*"
 
-#Eureka
+#Eureka DISCOVERY
 eureka:
   client:
     register-with-eureka: true
@@ -21,3 +25,12 @@ eureka:
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+
+
+jwt:
+  secret: ${JWT_SECRET}
