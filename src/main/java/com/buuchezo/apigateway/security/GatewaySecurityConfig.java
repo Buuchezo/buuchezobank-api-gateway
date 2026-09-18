@@ -30,6 +30,10 @@ public class GatewaySecurityConfig {
                         .uri("lb://USER-ACCOUNT-SERVICE"))
                 .route("transaction-service", r -> r.path("/api/transactions/**")
                         .uri("lb://TRANSACTION-SERVICE"))
+                .route(
+                        "notification-service", r -> r.path("/api/notifications/**")
+                                .uri("lb://NOTIFICATION-SERVICE")
+                )
                 .build();
     }
 }
