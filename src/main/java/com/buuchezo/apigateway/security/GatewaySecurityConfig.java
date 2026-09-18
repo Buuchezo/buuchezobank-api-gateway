@@ -1,6 +1,5 @@
 package com.buuchezo.apigateway.security;
 
-
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -14,22 +13,55 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 public class GatewaySecurityConfig {
 
     @Bean
-    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity httpSecurity) {
+    public SecurityWebFilterChain securityWebFilterChain(
+            ServerHttpSecurity httpSecurity
+    ) {
 
-        return httpSecurity.csrf(ServerHttpSecurity.CsrfSpec::disable)
+        return httpSecurity
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(authorizeExchangeSpec ->
-                        //allow global filter to handle the authentication
-                        authorizeExchangeSpec.anyExchange().permitAll()).build();
-
+                        // Allow the global authentication filter
+                        // to handle authentication and authorization.
+                        authorizeExchangeSpec
+                                .anyExchange()
+                                .permitAll()
+                )
+                .build();
     }
 
     @Bean
-    public RouteLocator routeLocator(RouteLocatorBuilder builder) {
+    public RouteLocator routeLocator(
+            RouteLocatorBuilder builder
+    ) {
+
         return builder.routes()
-                .route("user-account-service", r -> r.path("/api/auth/**", "/api/users/**", "/api/accounts/**")
-                        .uri("lb://USER-ACCOUNT-SERVICE"))
-                .route("transaction-service", r -> r.path("/api/transactions/**")
-                        .uri("lb://TRANSACTION-SERVICE"))
+
+                .route(
+                        "user-account-service",
+                        r -> r.path(
+                                        "/api/auth/**",
+                                        "/api/users/**",
+                                        "/api/accounts/**"
+                                )
+                                .uri("lb://USER-ACCOUNT-SERVICE")
+                )
+
+                .route(
+                        "transaction-service",
+                        r -> r.path(
+                                        "/api/transactions/**"
+                                )
+                                .uri("lb://TRANSACTION-SERVICE")
+                )
+
+                .route(
+                        "notification-service",
+                        r -> r.path(
+                                        "/api/notifications/**"
+                                )
+                                .uri("lb://NOTIFICATION-SERVICE")
+                )
+
                 .build();
     }
 }
