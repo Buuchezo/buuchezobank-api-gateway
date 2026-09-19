@@ -19,9 +19,9 @@ public class GatewaySecurityConfig {
 
         return httpSecurity
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .cors(cors -> {
+                })
                 .authorizeExchange(authorizeExchangeSpec ->
-                        // Allow the global authentication filter
-                        // to handle authentication and authorization.
                         authorizeExchangeSpec
                                 .anyExchange()
                                 .permitAll()
