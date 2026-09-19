@@ -1,6 +1,5 @@
 package com.buuchezo.apigateway.security;
 
-
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -15,35 +14,124 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class AuthentificationFilter implements GlobalFilter {
 
+    private static final String USER_EMAIL_HEADER = "X-User-Email";
 
     private final JwtValidationUtil jwtValidationUtil;
 
     @Override
-    public Mono<Void> filter(@NotNull ServerWebExchange exchange, GatewayFilterChain chain) {
+    public Mono<Void> filter(
+            @NotNull ServerWebExchange exchange,
+            GatewayFilterChain chain
+    ) {
 
-        String path = exchange.getRequest().getURI().getPath();
+        String path =
+                exchange.getRequest()
+                        .getURI()
+                        .getPath();
 
-        if (path.contains("/api/auth")) {
+        /*
+         * Login and registration do not require
+         * an existing JWT.
+         */
+        if (path.startsWith("/api/auth/")) {
             return chain.filter(exchange);
         }
-        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return onError(exchange, "No Authorization Header", HttpStatus.UNAUTHORIZED);
+
+        String authHeader =
+                exchange.getRequest()
+                        .getHeaders()
+                        .getFirst(HttpHeaders.AUTHORIZATION);
+
+        if (authHeader == null ||
+                !authHeader.startsWith("Bearer ")) {
+
+            return onError(
+                    exchange,
+                    "No Authorization Header",
+                    HttpStatus.UNAUTHORIZED
+            );
         }
 
         String token = authHeader.substring(7);
-        try {
-            jwtValidationUtil.validateToken(token);
-        } catch (Exception ex) {
-            return onError(exchange, ex.getMessage(), HttpStatus.UNAUTHORIZED);
-        }
 
-        return chain.filter(exchange);
+        try {
+
+            /*
+             * First validate the token.
+             */
+            jwtValidationUtil.validateToken(token);
+
+            /*
+             * Extract the authenticated user's email
+             * from the validated JWT.
+             */
+            String email =
+                    jwtValidationUtil.extractEmail(token);
+
+            if (email == null || email.isBlank()) {
+
+                return onError(
+                        exchange,
+                        "User email not found in token",
+                        HttpStatus.UNAUTHORIZED
+                );
+            }
+
+            /*
+             * Remove any X-User-Email supplied by the client.
+             *
+             * This is important because otherwise a client
+             * could send:
+             *
+             * X-User-Email: someone-else@example.com
+             *
+             * and impersonate another user.
+             */
+            ServerWebExchange modifiedExchange =
+                    exchange.mutate()
+                            .request(
+                                    exchange.getRequest()
+                                            .mutate()
+                                            .headers(headers -> {
+                                                headers.remove(
+                                                        USER_EMAIL_HEADER
+                                                );
+
+                                                headers.set(
+                                                        USER_EMAIL_HEADER,
+                                                        email
+                                                );
+                                            })
+                                            .build()
+                            )
+                            .build();
+
+            return chain.filter(modifiedExchange);
+
+        } catch (Exception ex) {
+
+            return onError(
+                    exchange,
+                    "Invalid or expired token",
+                    HttpStatus.UNAUTHORIZED
+            );
+        }
     }
 
-    private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
-        System.out.println("Error is: " + message);
-        exchange.getResponse().setStatusCode(status);
-        return exchange.getResponse().setComplete();
+    private Mono<Void> onError(
+            ServerWebExchange exchange,
+            String message,
+            HttpStatus status
+    ) {
+
+        System.out.println(
+                "Authentication error: " + message
+        );
+
+        exchange.getResponse()
+                .setStatusCode(status);
+
+        return exchange.getResponse()
+                .setComplete();
     }
 }
