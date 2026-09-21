@@ -69,6 +69,9 @@ public class GatewaySecurityConfig {
                                 )
                                 .uri("lb://CARD-SERVICE")
                 )
+                .route("market-data-service", r -> r.path(
+                        "/api/market/**"
+                ).uri("lb://MARKET-DATA-SERVICE"))
 
                 .build();
     }
