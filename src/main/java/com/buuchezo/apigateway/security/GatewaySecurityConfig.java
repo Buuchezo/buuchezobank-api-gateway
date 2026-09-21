@@ -62,6 +62,14 @@ public class GatewaySecurityConfig {
                                 .uri("lb://NOTIFICATION-SERVICE")
                 )
 
+                .route(
+                        "card-service",
+                        r -> r.path(
+                                        "/api/cards/**"
+                                )
+                                .uri("lb://CARD-SERVICE")
+                )
+
                 .build();
     }
 }
