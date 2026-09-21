@@ -72,6 +72,13 @@ public class GatewaySecurityConfig {
                 .route("market-data-service", r -> r.path(
                         "/api/market/**"
                 ).uri("lb://MARKET-DATA-SERVICE"))
+                .route(
+                        "investment-service",
+                        r -> r.path(
+                                        "/api/investments/**"
+                                )
+                                .uri("lb://INVESTMENT-SERVICE")
+                )
 
                 .build();
     }
