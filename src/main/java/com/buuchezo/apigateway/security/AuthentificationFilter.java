@@ -30,10 +30,13 @@ public class AuthentificationFilter implements GlobalFilter {
                         .getPath();
 
         /*
-         * Login and registration do not require
+         * Public endpoints that do not require
          * an existing JWT.
          */
-        if (path.startsWith("/api/auth/")) {
+        if (path.startsWith("/api/auth/")
+                || path.startsWith("/api/admin/auth/")
+                || path.equals("/api/businesses/onboarding")) {
+
             return chain.filter(exchange);
         }
 
