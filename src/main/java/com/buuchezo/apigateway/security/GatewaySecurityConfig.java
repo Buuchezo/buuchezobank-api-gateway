@@ -41,7 +41,8 @@ public class GatewaySecurityConfig {
                         r -> r.path(
                                         "/api/auth/**",
                                         "/api/users/**",
-                                        "/api/accounts/**"
+                                        "/api/accounts/**",
+                                "/api/businesses/**"
                                 )
                                 .uri("lb://USER-ACCOUNT-SERVICE")
                 )
